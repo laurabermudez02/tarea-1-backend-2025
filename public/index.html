@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Socket Test</title>
+</head>
+
+<body>
+  <h1>Gestión de Productos en Tiempo Real</h1>
+
+  <form id="productForm">
+    <input type="text" id="productName" placeholder="Nombre del producto" required>
+    <button type="button" onclick="addProduct()">Agregar Producto</button>
+  </form>
+
+  <form id="updateForm">
+    <input type="number" id="updateId" placeholder="ID del producto" required>
+    <input type="text" id="updateName" placeholder="Nuevo nombre" required>
+    <button type="button" onclick="updateProduct()">Actualizar Producto</button>
+  </form>
+
+  <form id="deleteForm">
+    <input type="number" id="deleteId" placeholder="ID del producto" required>
+    <button type="button" onclick="deleteProduct()">Eliminar Producto</button>
+  </form>
+
+  <ul id="products"></ul>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io("http://localhost:8080");
+
+    socket.on("connect", () => {
+      fetchProducts();
+    });
+
+    socket.on("productAdded", (product) => {
+      addMessage(`Producto agregado: ${product.name}`);
+      fetchProducts();
+    });
+
+    socket.on("productUpdated", (product) => {
+      addMessage(`Producto actualizado: ${product.name}`);
+      fetchProducts();
+    });
+
+    socket.on("productDeleted", (id) => {
+      addMessage(`Producto eliminado: ID ${id}`);
+      fetchProducts();
+    });
+
+    function fetchProducts() {
+      fetch("http://localhost:8080/products")
+        .then(response => response.json())
+        .then(data => {
+          const list = document.getElementById("products");
+          list.innerHTML = "";
+
+          if (data && data.data && Array.isArray(data.data)) {
+            data.data.forEach(product => {
+              const item = document.createElement("li");
+              item.textContent = `${product.id} - ${product.name}`;
+              list.appendChild(item);
+            });
+          } else {
+          }
+        })
+        .catch(error => console.error("Error al obtener productos:", error));
+    }
+
+
+
+    function addProduct() {
+      const name = document.getElementById("productName").value;
+      fetch("http://localhost:8080/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name })
+      })
+        .then(response => response.json())
+        .then(data => {
+          fetchProducts();
+        })
+        .catch();
+    }
+
+
+    function addProduct() {
+      const name = document.getElementById("productName").value;
+      fetch("http://localhost:8080/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name })
+      })
+        .then(response => response.json())
+        .then(data => {
+          fetchProducts();
+        })
+        .catch();
+    }
+
+
+    function updateProduct() {
+      const id = document.getElementById("updateId").value;
+      const name = document.getElementById("updateName").value;
+      socket.emit("updateProduct", { id, name });
+    }
+
+    function deleteProduct() {
+      const id = document.getElementById("deleteId").value;
+      socket.emit("deleteProduct", { id });
+    }
+
+    function addMessage(message) {
+      const list = document.getElementById("products");
+      const item = document.createElement("li");
+      item.textContent = message;
+      list.appendChild(item);
+    }
+  </script>
+</body>
+
+</html>

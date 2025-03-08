@@ -12,10 +12,10 @@ import { authMiddleware } from "../middlewares/auth.js";
 
 const ProductsRouter = Router();
 
-ProductsRouter.get("/", [authMiddleware], GetAllProducts);
+ProductsRouter.get("/", GetAllProducts);
 
 ProductsRouter.post("/", [
-    authMiddleware,
+    //authMiddleware,
     body("name").isString().withMessage("El nombre del producto es requerido"),
     validate,
 ], CreateProducts);

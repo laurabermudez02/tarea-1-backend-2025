@@ -1,6 +1,6 @@
 import Products from "./products-entity.js";
 import Valkey from "iovalkey";
-
+import { io } from "../utills/socket.js";
 
 const cache = new Valkey();
 
@@ -32,7 +32,9 @@ export const CreateProducts = async (req, res) => {
     }
 
     const newProduct = await Products.create(product);
-    cache.del("products ")
+    cache.del("products")
+
+    io.emit("productAdded", newProduct);
 
     return res.status(201).json({
         message: "Producto creado exitosamente",
@@ -52,6 +54,8 @@ export const UpdateProduct = async (req, res) => {
     const updatedProduct = await Products.update(productData, {where: {id}})
     cache.delete("products");
 
+    io.emit("productUpdated", { id, ...productData });
+    
     return res.status(200).json({
         message: "Producto actualizado exitosamente",
         data: updatedProduct,
@@ -70,6 +74,8 @@ export const DeleteProduct = async (req, res) => {
     await Products.destroy({where: {id}});
     cache.delete("products");
 
+    io.emit("productDeleted", id);
+    
     return res.status(200).json({
         message: "Producto eliminado exitosamente",
     });
